@@ -3,4 +3,6 @@ node_modules
 
 # input output files
 *.csv
+*.csv#
 *.xlsx
+*.xlsx#
