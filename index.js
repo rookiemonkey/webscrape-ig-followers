@@ -4,6 +4,7 @@ const puppeteer = require('puppeteer');
 const { parse } = require("csv-parse");
 const getStream = require('get-stream');
 
+let usingIgAccount = 1
 let numOfIgRequests = 0
 let currentRow = 2 // disregarding the headers
 
@@ -19,29 +20,37 @@ async function parseCSV(filePath) {
   return data;
 }
 
+async function getAccountPage(igUsername, igPassword) {
+  // initialize the browser, set headless to false to see how it works
+  const browser = await puppeteer.launch({ headless: false, args: ['--incognito'] });
+  const page = await browser.newPage();
+
+  // Configure the navigation timeout
+  await page.setDefaultNavigationTimeout(0);
+
+  // login any account first since it redirects to login page always if not logged in
+  // NOTE: if you have 2-factor authentication please turn it off for the meantime
+  await page.goto('https://www.instagram.com/accounts/login/');
+
+  await page.waitForSelector('[name=username]')
+  await page.waitForSelector('[name=password]')
+
+  await page.type('[name=username]', igUsername);
+  await page.type('[name=password]', igPassword);
+  await page.click('[type=submit]');
+  await page.waitForNavigation({ waitUntil: 'networkidle0' });
+
+  return page
+}
+
 (async function(){
 
   try {
     console.time(`Measure IG-Webscraper for ${targetFileName}`)
 
-    // initialize the browser, set headless to false to see how it works
-    const browser = await puppeteer.launch({ headless: false, args: ['--incognito'] });
-    const page = await browser.newPage();
-
-    // Configure the navigation timeout
-    await page.setDefaultNavigationTimeout(0);
-
-    // login any account first since it redirects to login page always if not logged in
-    // NOTE: if you have 2-factor authentication please turn it off for the meantime
-    await page.goto('https://www.instagram.com/accounts/login/');
-
-    await page.waitForSelector('[name=username]')
-    await page.waitForSelector('[name=password]')
-
-    await page.type('[name=username]', process.env.ig_username);
-    await page.type('[name=password]', process.env.ig_password);
-    await page.click('[type=submit]');
-    await page.waitForNavigation({ waitUntil: 'networkidle0' });
+    // spawn account pages
+    const accountOnePage = await getAccountPage(process.env.ig_username_one, process.env.ig_password_one)
+    const accountTwoPage = await getAccountPage(process.env.ig_username_two, process.env.ig_password_two)
 
     // recreate existing output
     if (fs.existsSync(targetFileName)) await fs.unlinkSync(targetFileName)
@@ -88,6 +97,8 @@ async function parseCSV(filePath) {
        * extract the followers count by dom manipulation
        */
       if (igUrl) {
+        const page = usingIgAccount === 1 ? accountOnePage : accountTwoPage
+
         await page.waitForTimeout(2500)
         await page.goto(igUrl, { waitUntil: 'networkidle0' });
 
@@ -97,6 +108,7 @@ async function parseCSV(filePath) {
         })
 
         numOfIgRequests += 1
+        usingIgAccount === 1 ? usingIgAccount = 2 : usingIgAccount = 1
       }
 
       // apppend the data, added an empty string for the email will be determined before appending

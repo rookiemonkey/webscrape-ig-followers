@@ -1,6 +1,8 @@
 1. Define env variables
-  ig_username=''
-  ig_password=''
+  ig_username_one=''
+  ig_password_one=''
+  ig_username_two=''
+  ig_password_two=''
   target_file_name=''
 
   - ig username/password is needed since IG always redirect to login page when navigating to an ig profile w/o any logged in account\
