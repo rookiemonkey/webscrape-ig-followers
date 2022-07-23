@@ -4,10 +4,12 @@ const puppeteer = require('puppeteer');
 const { parse } = require("csv-parse");
 const getStream = require('get-stream');
 
+let numOfIgRequests = 0
 let currentRow = 2 // disregarding the headers
+
 const added_headers = 'ig_followers,email,remarks'
-const targetFileName = 'shopgram-report-first-100.csv';
-const outputPath = `./output/${targetFileName}`;
+const targetFileName = process.env.target_file_name;
+const outputPath = `./output/output-${targetFileName}`;
 const inputPath = `./src/${targetFileName}`
 const noop = () => { }
 
@@ -51,6 +53,7 @@ async function parseCSV(filePath) {
     for(let row = 0; row < rows.length; row++) {
       const data = rows[row]
       const outputRow = [...data]
+      const name = data[0]
       const categories = data[6]
       const igUrl = data[7]
       const emails = data[14].split(' ')
@@ -85,13 +88,15 @@ async function parseCSV(filePath) {
        * extract the followers count by dom manipulation
        */
       if (igUrl) {
-        await page.waitForTimeout(5000)
+        await page.waitForTimeout(2500)
         await page.goto(igUrl, { waitUntil: 'networkidle0' });
 
         ig_followers = await page.evaluate(() => {
           const el = [...document.querySelectorAll('div')].filter(el => (el.innerHTML.includes('followers') && el.innerText.length <= 35))[0]
           return el ? parseInt(el.querySelector('span').title.replaceAll(',', '')) : 'INVALID IG URL'
         })
+
+        numOfIgRequests += 1
       }
 
       // apppend the data, added an empty string for the email will be determined before appending
@@ -129,7 +134,10 @@ async function parseCSV(filePath) {
       /**
        * OUTPUT THE PROGRESS
        */
-      console.log(`[DONE]: ${currentRow} of ${(rows.length)}`)
+      let numOfIgRequestsSummary = `${numOfIgRequests} IG HTTP Requests has been made so far`
+      if (ig_followers === 'INVALID IG URL') numOfIgRequestsSummary += ` [ERROR: INVALID IG URL] ${igUrl}`
+
+      console.log(`[DONE]: ${currentRow} of ${(rows.length)} | ${name} | ${numOfIgRequestsSummary}`)
       currentRow +=1
     }
 
