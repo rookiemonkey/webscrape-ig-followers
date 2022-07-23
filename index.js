@@ -112,7 +112,7 @@ async function getAccountPage(igUsername, igPassword) {
           usingIgAccount = 2
         }
 
-        if (usingIgAccount === 2) {
+        else {
           numOfIgRequests['2'] += 1
           usingIgAccount = 1
         }
