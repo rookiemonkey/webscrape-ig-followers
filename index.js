@@ -99,7 +99,7 @@ async function getAccountPage(igUsername, igPassword) {
       if (igUrl) {
         const page = usingIgAccount === 1 ? accountOnePage : accountTwoPage
 
-        await page.waitForTimeout(10000)
+        await page.waitForTimeout(20000)
         await page.goto(igUrl, { waitUntil: 'networkidle0' });
 
         ig_followers = await page.evaluate(() => {
