@@ -23,7 +23,7 @@ async function parseCSV(filePath) {
     console.time(`Measure IG-Webscraper for ${targetFileName}`)
 
     // initialize the browser, set headless to false to see how it works
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: false, args: ['--incognito'] });
     const page = await browser.newPage();
 
     // Configure the navigation timeout
@@ -85,6 +85,7 @@ async function parseCSV(filePath) {
        * extract the followers count by dom manipulation
        */
       if (igUrl) {
+        await page.waitForTimeout(5000)
         await page.goto(igUrl, { waitUntil: 'networkidle0' });
 
         ig_followers = await page.evaluate(() => {
