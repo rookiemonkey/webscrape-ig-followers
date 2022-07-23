@@ -4,8 +4,9 @@ const puppeteer = require('puppeteer');
 const { parse } = require("csv-parse");
 const getStream = require('get-stream');
 
+let currentRow = 2 // disregarding the headers
 const added_headers = 'ig_followers,email,remarks'
-const targetFileName = 'shopgram-report-first-10K.csv';
+const targetFileName = 'shopgram-report-first-100.csv';
 const outputPath = `./output/${targetFileName}`;
 const inputPath = `./src/${targetFileName}`
 const noop = () => { }
@@ -22,7 +23,7 @@ async function parseCSV(filePath) {
     console.time(`Measure IG-Webscraper for ${targetFileName}`)
 
     // initialize the browser, set headless to false to see how it works
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
 
     // login any account first since it redirects to login page always if not logged in
@@ -76,14 +77,14 @@ async function parseCSV(filePath) {
        * IG FOLLOWERS
        */
       // DETERMINE IG FOLLOWERS COUNT: if there is an IG URL
+      // redirect to target instagram account and wait until page has been loaded
+      // extract the followers count by dom manipulation
       if (igUrl) {
-        //  redirect to target instagram account and wait until page has been loaded
         await page.goto(igUrl, { waitUntil: 'networkidle0' });
 
-        // extract the followers count by dom manipulation
         ig_followers = await page.evaluate(() => {
           const el = [...document.querySelectorAll('div')].filter(el => (el.innerHTML.includes('followers') && el.innerText.length <= 35))[0]
-          return parseInt(el.querySelector('span').title.replaceAll(',', ''))
+          return el ? parseInt(el.querySelector('span').title.replaceAll(',', '')) : 'INVALID IG URL'
         })
       }
 
@@ -95,13 +96,16 @@ async function parseCSV(filePath) {
       /**
        * REMARKS
        */
-      let hasShirts = categories.includes('Shirts') || categories.includes('Shirt');
-      let hasHoodies = categories.includes('Hoodies') || categories.includes('Hoodie');
+      const searchKeys = ['Shirt', 'Hoodie', 'Sweater', 'Blanket']
 
-      if (hasShirts) remarks = 'Shirts';
-      if (hasHoodies) remarks = 'Hoodies';
-      if (hasShirts && hasHoodies) remarks = 'Shirts, Hoodies';
+      for (let searchKey of searchKeys) {
+        if (categories.includes(searchKey)) {
+          remarks === 'NO MATCHING CATEGORY' ? remarks = '' : null;
+          remarks += `${searchKey} `
+        }
+      }
 
+      // apppend the data
       outputRow.push(remarks)
 
 
@@ -114,13 +118,19 @@ async function parseCSV(filePath) {
         outputRow[16] = emails[count]
         await fs.appendFile(outputPath, `${outputRow.join(",")}\n`, noop)
       }
+
+      console.log(`[DONE]: ${currentRow} of ${(rows.length)}`)
+      currentRow +=1
     }
 
     console.timeEnd(`Measure IG-Webscraper for ${targetFileName}`)
   }
 
   catch(e) {
-    console.log('[ERROR]: ', e)
+    const stopMessage = `STOPPED @ ROW ${currentRow} of ${targetFileName}`;
+    await fs.appendFile(outputPath, stopMessage, noop)
+    console.log(`\n[ERROR]: ${stopMessage}\n`)
+    console.log('[ERROR]: ', e, '\n')
   }
 
 })()
