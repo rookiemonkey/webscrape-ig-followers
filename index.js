@@ -63,6 +63,7 @@ async function parseCSV(filePath) {
         continue;
       }
 
+
       // CLEAN DATA: normalize everything and enclose inside "" if there is a data
       for (let i in outputRow) outputRow[i] ? outputRow[i] = `"${outputRow[i]}"` : null
 
@@ -73,12 +74,13 @@ async function parseCSV(filePath) {
       if ((emails.length-1) > 0) appendTimes = (emails.length-1)
 
 
+
       /**
        * IG FOLLOWERS
+       * DETERMINE IG FOLLOWERS COUNT: if there is an IG URL
+       * redirect to target instagram account and wait until page has been loaded
+       * extract the followers count by dom manipulation
        */
-      // DETERMINE IG FOLLOWERS COUNT: if there is an IG URL
-      // redirect to target instagram account and wait until page has been loaded
-      // extract the followers count by dom manipulation
       if (igUrl) {
         await page.goto(igUrl, { waitUntil: 'networkidle0' });
 
@@ -113,12 +115,16 @@ async function parseCSV(filePath) {
       /**
        * EMAILS
        */
-
       for (let count = 0; count <= appendTimes; count++) {
         outputRow[16] = emails[count]
         await fs.appendFile(outputPath, `${outputRow.join(",")}\n`, noop)
       }
 
+
+
+      /**
+       * OUTPUT THE PROGRESS
+       */
       console.log(`[DONE]: ${currentRow} of ${(rows.length)}`)
       currentRow +=1
     }
