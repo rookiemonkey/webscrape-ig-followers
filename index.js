@@ -5,7 +5,7 @@ const { parse } = require("csv-parse");
 const getStream = require('get-stream');
 
 let usingIgAccount = 1
-let numOfIgRequests = 0
+let numOfIgRequests = { '1': 0, '2': 0 }
 let currentRow = 2 // disregarding the headers
 
 const added_headers = 'ig_followers,email,remarks'
@@ -107,8 +107,15 @@ async function getAccountPage(igUsername, igPassword) {
           return el ? parseInt(el.querySelector('span').title.replaceAll(',', '')) : 'INVALID IG URL'
         })
 
-        numOfIgRequests += 1
-        usingIgAccount === 1 ? usingIgAccount = 2 : usingIgAccount = 1
+        if (usingIgAccount === 1) {
+          numOfIgRequests['1'] += 1
+          usingIgAccount = 2
+        }
+
+        if (usingIgAccount === 2) {
+          numOfIgRequests['2'] += 1
+          usingIgAccount = 1
+        }
       }
 
       // apppend the data, added an empty string for the email will be determined before appending
@@ -146,7 +153,7 @@ async function getAccountPage(igUsername, igPassword) {
       /**
        * OUTPUT THE PROGRESS
        */
-      let numOfIgRequestsSummary = `${numOfIgRequests} IG HTTP Requests has been made so far`
+      let numOfIgRequestsSummary = `${numOfIgRequests['1']}-${numOfIgRequests['2']} IG HTTP Requests has been made so far`
       if (ig_followers === 'INVALID IG URL') numOfIgRequestsSummary += ` [ERROR: INVALID IG URL] ${igUrl}`
 
       console.log(`[DONE]: ${currentRow} of ${(rows.length)} | ${name} | ${numOfIgRequestsSummary}`)
