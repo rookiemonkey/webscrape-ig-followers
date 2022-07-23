@@ -26,6 +26,9 @@ async function parseCSV(filePath) {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
 
+    // Configure the navigation timeout
+    await page.setDefaultNavigationTimeout(0);
+
     // login any account first since it redirects to login page always if not logged in
     // NOTE: if you have 2-factor authentication please turn it off for the meantime
     await page.goto('https://www.instagram.com/accounts/login/');
