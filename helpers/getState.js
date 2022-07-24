@@ -5,7 +5,7 @@ const inputPath = `./src/${targetFileName}`
 const noop = () => { }
 
 let usingIgAccount = 1
-let numOfIgRequests = { '1': 0, '2': 0 }
+let numOfIgRequests = 0
 let currentRow = 2 // disregarding the headers
 
 module.exports = {

@@ -11,8 +11,11 @@ const state = require('./helpers/getState');
     console.time(`Measure IG-Webscraper for ${state.targetFileName}`)
 
     // spawn account pages
-    const accountOnePage = await getAccountPage(process.env.ig_username_one, process.env.ig_password_one)
-    const accountTwoPage = await getAccountPage(process.env.ig_username_two, process.env.ig_password_two)
+    const accountOnePage = await getAccountPage(process.env.ig_username_one, process.env.ig_password_one, false)
+    const accountTwoPage = await getAccountPage(process.env.ig_username_two, process.env.ig_password_two, false)
+    const accountThreePage = await getAccountPage(null, null, false)
+    const accountFourPage = await getAccountPage(null, null, false)
+    const accountFivePage = await getAccountPage(null, null, false)
 
     // recreate existing output
     if (fs.existsSync(state.targetFileName)) await fs.unlinkSync(state.targetFileName)
@@ -74,25 +77,26 @@ const state = require('./helpers/getState');
        * extract the followers count by dom manipulation
        */
       if (remarks !== labels.no_matching_category && igUrl) {
-        const page = state.usingIgAccount === 1 ? accountOnePage : accountTwoPage
+        let page = null
 
-        await page.waitForTimeout(20000)
+        switch(true) {
+          case state.usingIgAccount === 1: page = accountOnePage; break;
+          case state.usingIgAccount === 2: page = accountTwoPage; break;
+          case state.usingIgAccount === 3: page = accountThreePage; break;
+          case state.usingIgAccount === 4: page = accountFourPage; break;
+          case state.usingIgAccount === 5: page = accountFivePage; break;
+        }
+
+        await page.waitForTimeout(2500)
         await page.goto(igUrl, { waitUntil: 'networkidle0' });
 
-        ig_followers = await page.evaluate(() => {
+        ig_followers = await page.evaluate((labels) => {
           const el = [...document.querySelectorAll('div')].filter(el => (el.innerHTML.includes('followers') && el.innerText.length <= 35))[0]
-          return el ? parseInt(el.querySelector('span').title.replaceAll(',', '')) : labels.invalid_ig_url
+          return el ? parseInt(el.querySelector('span').title.replaceAll(',', '')) : 'INVALID IG URL'
         })
 
-        if (state.usingIgAccount === 1) {
-          state.numOfIgRequests['1'] += 1
-          state.usingIgAccount = 2
-        }
-
-        else {
-          state.numOfIgRequests['2'] += 1
-          state.usingIgAccount = 1
-        }
+        state.usingIgAccount === 5 ? state.usingIgAccount = 1 : state.usingIgAccount += 1
+        state.numOfIgRequests+=1
       }
 
       if (remarks === labels.no_matching_category) ig_followers = `DID NOT CHECK FOLLOWERS (REASON: ${labels.no_matching_category})`
@@ -117,7 +121,7 @@ const state = require('./helpers/getState');
       /**
        * OUTPUT THE PROGRESS
        */
-      let numOfIgRequestsSummary = `${state.numOfIgRequests['1']}-${state.numOfIgRequests['2']} IG HTTP Requests has been made so far`
+      let numOfIgRequestsSummary = `${state.numOfIgRequests} IG HTTP Requests has been made so far`
       if (ig_followers === 'INVALID IG URL') numOfIgRequestsSummary += ` [ERROR: ${labels.invalid_ig_url}] ${igUrl}`
 
       console.log(`[DONE]: ${state.currentRow} of ${(rows.length)} | ${name} | ${numOfIgRequestsSummary}`)
@@ -125,6 +129,7 @@ const state = require('./helpers/getState');
     }
 
     console.timeEnd(`Measure IG-Webscraper for ${state.targetFileName}`)
+    process.exit()
   }
 
   catch(e) {
@@ -132,6 +137,7 @@ const state = require('./helpers/getState');
     await fs.appendFile(state.outputPath, stopMessage, state.noop)
     console.log(`\n[ERROR]: ${stopMessage}\n`)
     console.log('[ERROR]: ', e, '\n')
+    process.exit()
   }
 
 })()

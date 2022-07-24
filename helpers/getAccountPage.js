@@ -1,9 +1,12 @@
 const puppeteer = require('puppeteer');
 
-module.exports = async function getAccountPage(igUsername, igPassword) {
+module.exports = async function getAccountPage(igUsername, igPassword, login) {
   // initialize the browser, set headless to false to see how it works
-  const browser = await puppeteer.launch({ headless: false, args: ['--incognito'] });
-  const page = await browser.newPage();
+  const browser = await puppeteer.launch({ headless: false });
+  const context = await browser.createIncognitoBrowserContext();
+  const page = await context.newPage();
+
+  if (!login) return page
 
   // Configure the navigation timeout
   await page.setDefaultNavigationTimeout(0);
