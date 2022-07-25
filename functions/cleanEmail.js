@@ -30,7 +30,7 @@ const { cleanEmail, noop } = require('../helpers/getState');
       for (let i in outputRow) outputRow[i] ? outputRow[i] = `"${outputRow[i]}"` : null
 
       // CLEAN DATA: remove email value if its an invalid email format
-      const isEmailValid = validator.validate(outputRow[16]);
+      const isEmailValid = validator.validate(outputRow[16].replace(/"/g, ''));
       if (!isEmailValid && outputRow[16] !== '') outputRow[16] = ''
 
       await fs.appendFile(cleanEmail.outputPath(), `${outputRow.join(",")}\n`, noop)
