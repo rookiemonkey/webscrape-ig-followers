@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "get-followers": "clear && node index.js"
+    "get-followers": "clear && node index.js",
+    "clean-email": "clear && node ./functions/cleanEmail.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "csv-parse": "^5.3.0",
     "dotenv": "^16.0.1",
+    "email-validator": "^2.0.4",
     "get-stream": "^6.0.1",
     "node-csv": "^0.1.2",
     "puppeteer": "^15.4.0"
