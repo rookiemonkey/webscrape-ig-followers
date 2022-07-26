@@ -1,6 +1,8 @@
 require('dotenv').config()
 const fs = require("fs");
+const emailValidator = require("email-validator");
 const parseCSV = require('./helpers/parseCsv');
+const getPageAndRetry = require('./helpers/getPageAndRetry');
 const getAccountPage = require('./helpers/getAccountPage');
 const labels = require('./helpers/getLabels');
 const state = require('./helpers/getState');
@@ -88,7 +90,7 @@ const state = require('./helpers/getState');
         }
 
         await page.waitForTimeout(2500)
-        await page.goto(igUrl, { waitUntil: 'networkidle0' });
+        await getPageAndRetry(page, igUrl);
 
         ig_followers = await page.evaluate((labels) => {
           const el = [...document.querySelectorAll('div')].filter(el => (el.innerHTML.includes('followers') && el.innerText.length <= 35))[0]
@@ -111,7 +113,9 @@ const state = require('./helpers/getState');
        * EMAILS
        */
       for (let count = 0; count <= appendTimes; count++) {
-        outputRow[16] = emails[count]
+        const isEmailValid = emailValidator.validate(emails[count].replace(/"/g, ''));
+        isEmailValid ? outputRow[16] = emails[count] : outputRow[16] = '';
+        
         await fs.appendFile(state.outputPath, `${outputRow.join(",")}\n`, state.noop)
       }
 
