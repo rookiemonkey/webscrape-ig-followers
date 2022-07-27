@@ -1,4 +1,5 @@
 const state = require('./getState');
+const fs = require("fs");
 
 module.exports = async function getPageAndRetry(page, url) {
   try {
