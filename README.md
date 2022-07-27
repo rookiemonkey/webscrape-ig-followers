@@ -1,4 +1,5 @@
 1. Define env variables
+  num_of_windows=
   ig_username_one=''
   ig_password_one=''
   ig_username_two=''

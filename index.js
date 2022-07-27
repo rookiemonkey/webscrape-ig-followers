@@ -12,12 +12,9 @@ const state = require('./helpers/getState');
   try {
     console.time(`Measure IG-Webscraper for ${state.targetFileName}`)
 
-    // spawn account pages
-    const accountOnePage = await getAccountPage(process.env.ig_username_one, process.env.ig_password_one, false)
-    const accountTwoPage = await getAccountPage(process.env.ig_username_two, process.env.ig_password_two, false)
-    const accountThreePage = await getAccountPage(null, null, false)
-    const accountFourPage = await getAccountPage(null, null, false)
-    const accountFivePage = await getAccountPage(null, null, false)
+    const windows = {}
+
+    for (let i = 1; i <= process.env.num_of_windows; i++) windows[i] = await getAccountPage(null, null, false)
 
     // recreate existing output
     if (fs.existsSync(state.targetFileName)) await fs.unlinkSync(state.targetFileName)
@@ -74,34 +71,24 @@ const state = require('./helpers/getState');
 
 
       /**
-       * DETERMINE IG FOLLOWERS COUNT: if there is an IG URL and if there is a matching category
+       * DETERMINE IG FOLLOWERS COUNT: if there is an IG URL
        * redirect to target instagram account and wait until page has been loaded
        * extract the followers count by dom manipulation
        */
-      if (remarks !== labels.no_matching_category && igUrl) {
-        let page = null
-
-        switch(true) {
-          case state.usingIgAccount === 1: page = accountOnePage; break;
-          case state.usingIgAccount === 2: page = accountTwoPage; break;
-          case state.usingIgAccount === 3: page = accountThreePage; break;
-          case state.usingIgAccount === 4: page = accountFourPage; break;
-          case state.usingIgAccount === 5: page = accountFivePage; break;
-        }
+      if (igUrl) {
+        const page = windows[state.usingIgAccount]
 
         await page.waitForTimeout(2500)
         await getPageAndRetry(page, igUrl);
 
-        ig_followers = await page.evaluate((labels) => {
+        ig_followers = await page.evaluate(() => {
           const el = [...document.querySelectorAll('div')].filter(el => (el.innerHTML.includes('followers') && el.innerText.length <= 35))[0]
           return el ? parseInt(el.querySelector('span').title.replaceAll(',', '')) : 'INVALID IG URL'
         })
 
-        state.usingIgAccount === 5 ? state.usingIgAccount = 1 : state.usingIgAccount += 1
+        state.usingIgAccount == process.env.num_of_windows ? state.usingIgAccount = 1 : state.usingIgAccount += 1
         state.numOfIgRequests+=1
       }
-
-      if (remarks === labels.no_matching_category) ig_followers = `DID NOT CHECK FOLLOWERS (REASON: ${labels.no_matching_category})`
 
       // apppend the data, added an empty string for the email will be determined before appending
       outputRow.push(ig_followers, '', remarks)
@@ -114,9 +101,11 @@ const state = require('./helpers/getState');
        */
       for (let count = 0; count <= appendTimes; count++) {
         const isEmailValid = emailValidator.validate(emails[count].replace(/"/g, ''));
-        isEmailValid ? outputRow[16] = emails[count] : outputRow[16] = '';
-        
-        await fs.appendFile(state.outputPath, `${outputRow.join(",")}\n`, state.noop)
+
+        if (isEmailValid) {
+          outputRow[16] = emails[count];
+          await fs.appendFile(state.outputPath, `${outputRow.join(",")}\n`, state.noop)
+        }
       }
 
 
