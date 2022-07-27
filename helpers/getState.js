@@ -1,6 +1,7 @@
 const added_headers = 'ig_followers,email,remarks'
 const targetFileName = process.env.target_file_name;
-const outputPath = `./output/OUTPUT-IG-FOLLOWERS-${targetFileName}`;
+const logPath = `./output/LOGS-${targetFileName}.log`
+const outputPath = `./output/OUTPUT-${targetFileName}`;
 const inputPath = `./src/${targetFileName}`
 const noop = () => { }
 
@@ -17,6 +18,7 @@ let currentRow = 2 // disregarding the headers
 module.exports = {
   added_headers,
   targetFileName,
+  logPath,
   outputPath,
   inputPath,
   noop,

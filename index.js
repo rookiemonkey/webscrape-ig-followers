@@ -16,9 +16,11 @@ const state = require('./helpers/getState');
 
     for (let i = 1; i <= process.env.num_of_windows; i++) windows[i] = await getAccountPage(null, null, false)
 
-    // recreate existing output
-    if (fs.existsSync(state.targetFileName)) await fs.unlinkSync(state.targetFileName)
+    // recreate existing output/logs
+    if (fs.existsSync(state.outputPath)) await fs.unlinkSync(state.outputPath)
+    if (fs.existsSync(state.logPath)) await fs.unlinkSync(state.logPath)
     await fs.writeFileSync(state.outputPath, '')
+    await fs.writeFileSync(state.logPath, '')
 
     // begin parsing
     const rows = await parseCSV(state.inputPath)
@@ -101,11 +103,9 @@ const state = require('./helpers/getState');
        */
       for (let count = 0; count <= appendTimes; count++) {
         const isEmailValid = emailValidator.validate(emails[count].replace(/"/g, ''));
+        if (isEmailValid) outputRow[16] = emails[count]
 
-        if (isEmailValid) {
-          outputRow[16] = emails[count];
-          await fs.appendFile(state.outputPath, `${outputRow.join(",")}\n`, state.noop)
-        }
+        await fs.appendFile(state.outputPath, `${outputRow.join(",")}\n`, state.noop)
       }
 
 
@@ -117,7 +117,9 @@ const state = require('./helpers/getState');
       let numOfIgRequestsSummary = `${state.numOfIgRequests} IG HTTP Requests has been made so far`
       if (ig_followers === 'INVALID IG URL') numOfIgRequestsSummary += ` [ERROR: ${labels.invalid_ig_url}] ${igUrl}`
 
-      console.log(`[DONE]: ${state.currentRow} of ${(rows.length)} | ${name} | ${numOfIgRequestsSummary}`)
+      const logMessage = `[DONE]: ${state.currentRow} of ${(rows.length)} | ${name} | ${numOfIgRequestsSummary}`
+      await fs.appendFile(state.logPath, `${logMessage}\n`, state.noop)
+      console.log(logMessage)
       state.currentRow +=1
     }
 
