@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "get-followers": "clear && node index.js",
-    "clean-email": "clear && node ./functions/cleanEmail.js"
+    "get-followers": "clear && node index.js"
   },
   "author": "",
   "license": "ISC",
