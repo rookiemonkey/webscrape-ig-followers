@@ -3,10 +3,10 @@ const fsPromise = require('fs/promises');
 
 class State {
   constructor() {
-    this.addedHeaders = process.env.added_headers;
     this.targetFileName = process.env.target_file_name;
     this.inputPath = `./src/${this.targetFileName}`;
     this.outputPath = `./output/OUTPUT-${this.targetFileName}`;
+    this.cachedHeadersPath = `./output/CACHED-HEADERS-${this.targetFileName}`;
     this.logPath = `./output/LOGS-${this.targetFileName}.log`;
     this.keyOfActiveBrowser = 1
     this.numOfIgRequests = 0
@@ -26,15 +26,20 @@ class State {
   }
 
   async cleanOutput() {
-    if (fs.existsSync(this.outputPath)) await fsPromise.unlink(this.outputPath)
-    if (fs.existsSync(this.logPath)) await fsPromise.unlink(this.logPath)
+    const properties = ['outputPath', 'cachedHeadersPath', 'logPath']
 
-    await fsPromise.writeFile(this.outputPath, '')
-    await fsPromise.writeFile(this.logPath, '')
+    for (const prop of properties) {
+      if (fs.existsSync(this[prop])) await fsPromise.unlink(this[prop])
+      await fsPromise.writeFile(this[prop], '')
+    }
   }
 
   async appendOutput(data) {
     await fsPromise.appendFile(this.outputPath, data)
+  }
+
+  async appendCachedHeaders(headers) {
+    await fsPromise.appendFile(this.cachedHeadersPath, headers)
   }
 }
 

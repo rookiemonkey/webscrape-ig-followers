@@ -1,5 +1,9 @@
 const emailValidator = require("email-validator");
 
-String.prototype.isEmail = function () { return emailValidator.validate(this) }
+const methods = {
+  isEmail: function () { return emailValidator.validate(this) },
+  toBoolean: function () { return this.toLowerCase() === 'true' ? true : false },
+  removeQuoations: function () { return this.replaceAll(/"/g, '') }
+}
 
-String.prototype.toBoolean = function() { return this.toLowerCase() === 'true' ? true : false }
+for (const method of Object.keys(methods)) String.prototype[method] = methods[method]
