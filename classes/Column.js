@@ -3,10 +3,11 @@ const Parser = require('./Parser');
 const parser = new Parser();
 
 class Column {
-  constructor(rowData, state, windows, header, isLastColumn) {
+  constructor(rowData, state, windows, igClient, header, isLastColumn) {
     this.rowData = rowData
     this.state = state
     this.windows = windows
+    this.igClient = igClient
     this.header = header
     this.isLastColumn = isLastColumn
   }

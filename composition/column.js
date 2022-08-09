@@ -28,6 +28,27 @@ module.exports = {
     this.rowData.pushData(`"${igFollowers}"`)
   },
 
+  add_data_for_ig_followers_v2: async function () {
+    const igUrl = this.rowData.getIgUrl();
+    let igFollowers = process.env.default_ig_followers
+
+    if (igUrl) {
+      igFollowers = "NOT FOUND"
+
+      const username = this.igClient.getUserName(igUrl);
+      const results = await this.igClient.search.users(username)
+
+      if (results.length > 0) {
+        const userInsight = await this.igClient.insight.account({ userId: results[0].pk })
+        igFollowers = userInsight.data.user.followers_count
+      }
+
+      this.state.incrementNumOfIgRequests();
+    }
+
+    this.rowData.pushData(`"${igFollowers}"`)
+  },
+
   add_data_for_email: async function() {
     for (let count = 0; count <= this.rowData.appendTimes; count++) {
       const emails = this.rowData.getEmails()
