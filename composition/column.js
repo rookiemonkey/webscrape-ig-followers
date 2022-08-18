@@ -66,6 +66,21 @@ module.exports = {
         this.rowData.pushRow(newRow)
       }
     }
+  },
+
+  add_data_for_primary_email: async function() {
+    const emails = this.rowData.getEmails()
+
+    const keywords = ['info', 'admin', 'contact', 'business', 'collab', 'contact']
+    const filteredEmails = emails.filter(email => keywords.some(keyword => keyword === email.toLowerCase().slice(0, email.indexOf('@'))))
+
+    let randomEmail = ''
+
+    if (emails.length > 0) randomEmail = emails[Math.floor(Math.random() * emails.length)]
+
+    if (filteredEmails.length > 0) randomEmail = filteredEmails[Math.floor(Math.random() * filteredEmails.length)]
+
+    this.rowData.pushData(`"${randomEmail}"`)
   }
 
 }

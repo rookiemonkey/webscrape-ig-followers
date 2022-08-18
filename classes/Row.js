@@ -10,6 +10,8 @@ class Row {
   }
   
   _cleanExtraCommas() {
+    if (!process.env.remove_extra_commas.toBoolean()) return null
+
     this.mainData().splice(15, this.mainData().length)
   }
 
@@ -18,6 +20,8 @@ class Row {
   }
 
   _determineAppendTimes() {
+    if (!process.env.append_multiple_times.toBoolean()) return null
+
     if ((this.getEmails().length - 1) > 0) this.appendTimes = (this.getEmails().length - 1)
   }
 

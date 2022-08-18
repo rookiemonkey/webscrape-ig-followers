@@ -20,6 +20,8 @@ class Windows {
   }
 
   async initializeBrowser() {
+    if (!process.env.initialize_browser_windows.toBoolean()) return null
+
     const browser = await puppeteer.launch({ headless: this.headless });
     const context = await browser.createIncognitoBrowserContext();
     return await context.newPage();

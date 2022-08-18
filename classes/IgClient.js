@@ -10,6 +10,8 @@ class IgClient {
   }
 
   async initialize() {
+    if (!process.env.initialize_ig_client.toBoolean()) return null
+
     const dummyUsername = process.env.ig_username
     const dummyPassword = process.env.ig_password
 
