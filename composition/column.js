@@ -1,7 +1,9 @@
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+
 module.exports = {
 
   add_data_for_remarks: async function() {
-    const searchKeys = ['Shirt', 'Hoodie', 'Sweater', 'Blanket']
+    const searchKeys = ['Shirt', 'Hoodie', 'Sweater', 'Blanket', 'Vest']
     let remarks = process.env.default_remarks
 
     for (let searchKey of searchKeys) {
@@ -47,6 +49,37 @@ module.exports = {
     }
 
     this.rowData.pushData(`"${igFollowers}"`)
+  },
+
+  add_data_for_ig_followers_v3: async function() {
+    try {
+      const igUrl = this.rowData.getIgUrl();
+      let igFollowers = process.env.default_ig_followers
+
+      if (igUrl) {
+        igFollowers = "NOT FOUND"
+
+        const username = this.igClient.getUserName(igUrl);
+        const raw = await fetch(`https://www.instagram.com/${username}/?__a=1&__d=dis`)
+        const response = await raw.json()
+
+        if (response && response.graphql && response.graphql.user && response.graphql.user.edge_followed_by) {
+          igFollowers = response.graphql.user.edge_followed_by.count
+          this.windows.logFile.log(`[GET] ${username} #of FOLLOWERS - ${igFollowers}`)
+        }
+
+        this.state.incrementNumOfIgRequests();
+        await this.state.sleep(process.env.delay);
+      }
+
+      this.rowData.pushData(`"${igFollowers}"`)
+    }
+    catch(e) {
+      const igUrl = this.rowData.getIgUrl();
+      const username = this.igClient.getUserName(igUrl);
+      this.windows.logFile.log(`[ERROR] Parsing JSON data for ${username}`)
+      this.rowData.pushData(`"HAS IG URL - BUT JSON PARSING ERROR"`)
+    }
   },
 
   add_data_for_email: async function() {

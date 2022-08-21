@@ -15,6 +15,7 @@
     "get-stream": "^6.0.1",
     "instagram-private-api": "^1.45.3",
     "node-csv": "^0.1.2",
+    "node-fetch": "^3.2.10",
     "puppeteer": "^15.4.0"
   }
 }

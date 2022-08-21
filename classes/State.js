@@ -25,6 +25,10 @@ class State {
     this.keyOfActiveBrowser == process.env.num_of_windows ? this.keyOfActiveBrowser = 1 : this.keyOfActiveBrowser += 1
   }
 
+  sleep(ms) {
+    return new Promise(r => setTimeout(r, ms))
+  }
+
   async cleanOutput() {
     const properties = ['outputPath', 'cachedHeadersPath', 'logPath']
 

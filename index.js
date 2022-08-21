@@ -64,7 +64,7 @@ const timer = new Timer(`Measure IG-Webscraper for ${state.targetFileName}`);
 
       // ouput the progress
       let numOfIgRequestsSummary = `${state.numOfIgRequests} IG HTTP Requests`
-      await logFile.log(`[DONE]: ${state.numOfCurrentRow} of ${(rows.length)} | ${numOfIgRequestsSummary} | ${rowData.getName()}`, null)
+      await logFile.log(`[DONE]: ${state.numOfCurrentRow} of ${(rows.length)} | ${numOfIgRequestsSummary} | ${rowData.getName()}\n`, null)
 
       state.incrementNumOfCurrentRow();
     }
