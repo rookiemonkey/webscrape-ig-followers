@@ -9,5 +9,5 @@ module.exports = {
   getLinkedInUrl: function () { return this.mainData()[11].removeQuoations() },
   getPinterestUrl: function () { return this.mainData()[12].removeQuoations() },
   getTikTokUrl: function () { return this.mainData()[13].removeQuoations() },
-  getEmails: function () { return this.mainData()[14].removeQuoations().split(' ') }
+  getEmails: function () { return this.mainData()[14].removeQuoations().split(' ').filter(email => email.isEmail()) }
 }

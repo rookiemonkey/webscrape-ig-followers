@@ -12,7 +12,7 @@ class Row {
   _cleanExtraCommas() {
     if (!process.env.remove_extra_commas.toBoolean()) return null
 
-    this.mainData().splice(15, this.mainData().length)
+    this.mainData().splice(parseInt(process.env.remove_extra_commas_starting_at_index), this.mainData().length)
   }
 
   _cleanValuesWithQuotations() {

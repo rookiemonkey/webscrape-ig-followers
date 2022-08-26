@@ -13,6 +13,7 @@ class LogFile {
     if (error) logMessage = `${message} - ${error.message}`
 
     console.log(logMessage)
+    if (error) console.log(error)
 
     if (this.enabled) await fsPromise.appendFile(this.path, `${logMessage}\n`)
   }

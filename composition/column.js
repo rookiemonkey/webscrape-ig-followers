@@ -86,11 +86,10 @@ module.exports = {
     for (let count = 0; count <= this.rowData.appendTimes; count++) {
       const emails = this.rowData.getEmails()
       const email = emails[count]
-      const isEmail = email.removeQuoations().isEmail()
+      if (!email) continue;
 
       if (count === 0) {
-        if (!isEmail) this.rowData.pushData('')
-        else this.rowData.pushData(`"${email}"`)
+        this.rowData.pushData(`"${email}"`)
       }
 
       if (count > 0) {
