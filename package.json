@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "get-followers": "clear && node index.js"
+    "get-followers": "clear && node index.js",
+    "split": "clear && node index-split.js"
   },
   "author": "",
   "license": "ISC",
