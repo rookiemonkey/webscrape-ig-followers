@@ -1,4 +1,8 @@
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const { SocksProxyAgent } = require('socks-proxy-agent')
+const proxyAgent = new SocksProxyAgent('socks5://localhost:9050');
+
+const Device = require('../classes/Device');
 
 module.exports = {
 
@@ -22,12 +26,13 @@ module.exports = {
     if (igUrl) {
       igFollowers = await this.windows.evaluateIgUrl(igUrl, false);
       
-      if (!igFollowers) igFollowers = process.env.max_retries_error;
+      // if (!igFollowers) igFollowers = process.env.max_retries_error;
       this.state.incrementKeyOfActiveBrowser();
       this.state.incrementNumOfIgRequests();
     }
 
-    this.rowData.pushData(`"${igFollowers}"`)
+    this.windows.resetRetries();
+    this.rowData.pushData(`"${igFollowers}"`);
   },
 
   add_data_for_ig_followers_v2: async function () {
@@ -53,6 +58,8 @@ module.exports = {
 
   add_data_for_ig_followers_v3: async function() {
     try {
+      const device = new Device();
+      await device.initialize();
       const igUrl = this.rowData.getIgUrl();
       let igFollowers = process.env.default_ig_followers
 
@@ -60,26 +67,46 @@ module.exports = {
         igFollowers = "NOT FOUND"
 
         const username = this.igClient.getUserName(igUrl);
-        const raw = await fetch(`https://www.instagram.com/${username}/?__a=1&__d=dis`)
+        const raw = await fetch(`https://www.instagram.com/${username}/?__a=1&__d=dis`, { agent: proxyAgent, "User-Agent": device.getUserAgentString() })
+
         const response = await raw.json()
 
-        if (response && response.graphql && response.graphql.user && response.graphql.user.edge_followed_by) {
-          igFollowers = response.graphql.user.edge_followed_by.count
-          this.windows.logFile.log(`[GET] ${username} #of FOLLOWERS - ${igFollowers}`)
-        }
+        // if (response && response.graphql && response.graphql.user && response.graphql.user.edge_followed_by) {
+        //   igFollowers = response.graphql.user.edge_followed_by.count
+        //   console.log(`[GET] ${username} #of FOLLOWERS - ${igFollowers}`)
+        //   this.windows.logFile.log(`[GET] ${username} #of FOLLOWERS - ${igFollowers}`)
+        // }
 
-        this.state.incrementNumOfIgRequests();
+        // this.state.incrementNumOfIgRequests();
         await this.state.sleep(process.env.delay);
       }
 
-      this.rowData.pushData(`"${igFollowers}"`)
+      // this.rowData.pushData(`"${igFollowers}"`)
     }
     catch(e) {
+      console.log(e)
       const igUrl = this.rowData.getIgUrl();
       const username = this.igClient.getUserName(igUrl);
       this.windows.logFile.log(`[ERROR] Parsing JSON data for ${username}`)
       this.rowData.pushData(`"HAS IG URL - BUT JSON PARSING ERROR"`)
     }
+  },
+
+  add_data_for_ig_followers_v5: async function () {
+    const igUrl = this.rowData.getIgUrl();
+    let igFollowers = process.env.default_ig_followers
+
+    if (igUrl) {
+      const username = this.igClient.getUserName(igUrl);
+      const url = `https://www.instagram.com/${username}/channel/?__a=1&__d=dis`
+      igFollowers = await this.windows.evaluateIgUrlJson(url, false);
+
+      if (!igFollowers) igFollowers = process.env.max_retries_error;
+      this.state.incrementKeyOfActiveBrowser();
+      this.state.incrementNumOfIgRequests();
+    }
+
+    this.rowData.pushData(`"${igFollowers}"`)
   },
 
   add_data_for_email: async function() {

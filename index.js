@@ -4,6 +4,7 @@ require('./composition/strings');
 const State = require('./classes/State');
 const LogFile = require('./classes/LogFile');
 const Windows = require('./classes/Windows');
+const Device = require('./classes/Device');
 const Timer = require('./classes/Timer');
 const Parser = require('./classes/Parser');
 const Row = require('./classes/Row');
@@ -13,6 +14,7 @@ const IgClient = require('./classes/IgClient');
 
 const state = new State();
 const igClient = new IgClient();
+const device = new Device();
 const logFile = new LogFile(state.logPath);
 const windows = new Windows(state, logFile);
 const parser = new Parser();
@@ -27,7 +29,10 @@ const timer = new Timer(`Measure IG-Webscraper for ${state.targetFileName}`);
     await windows.initializeBrowsers();
 
     // initialize ig mobile
-    await igClient.initialize()
+    await igClient.initialize();
+
+    // initialize user agent strings
+    await device.initialize();
 
     // recreate existing output/logs
     await state.cleanOutput();
@@ -54,7 +59,7 @@ const timer = new Timer(`Measure IG-Webscraper for ${state.targetFileName}`);
       for (let headerIndex = 0; headerIndex < addedHeaders.length; headerIndex++) {
         const headerName = addedHeaders[headerIndex]
         const isLastColumn = headerIndex === addedHeaders.length-1 ? true : false
-        const column = new Column(rowData, state, windows, igClient, headerName, isLastColumn)
+        const column = new Column(rowData, state, windows, igClient, headerName, isLastColumn, device)
         await column.addHeader()
         await column.addRowData()
       }
